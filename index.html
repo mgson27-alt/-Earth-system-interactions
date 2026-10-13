@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지구계 탐험가 - 지구계 상호작용 퀴즈</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas Library for Result Capture -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'Outfit', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shake': 'shake 0.4s ease-in-out',
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '20%': { transform: 'translateX(-8px)' },
+                            '40%': { transform: 'translateX(8px)' },
+                            '60%': { transform: 'translateX(-4px)' },
+                            '80%': { transform: 'translateX(4px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b1329;
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .sphere-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sphere-btn:active {
+            transform: scale(0.95);
+        }
+        .slot-box {
+            transition: all 0.3s ease;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 overflow-x-hidden font-sans relative">
+
+    <!-- Canvas Background for dynamic stars and visual particle FX -->
+    <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-50"></canvas>
+    <canvas id="fxCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <div class="w-full max-w-2xl z-10 flex flex-col my-auto space-y-4">
+        
+        <header class="flex justify-between items-center glass-panel px-4 py-3 rounded-2xl shadow-xl">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center font-black text-xl shadow-lg">
+                    🔄
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300">
+                        지구계 상호작용 퀴즈
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">구성요소 간의 활발한 상호작용 탐험</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button id="bookBtn" onclick="openCodex()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs flex items-center space-x-1 border border-slate-700">
+                    <span>📚</span>
+                    <span class="hidden sm:inline">정리표</span>
+                </button>
+                <button id="soundToggle" onclick="toggleSound()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all text-xs flex items-center space-x-1 border border-slate-700">
+                    <span id="soundIcon">🔊</span>
+                </button>
+            </div>
+        </header>
+
+        <main id="startScreen" class="glass-panel p-6 sm:p-8 rounded-3xl text-center shadow-2xl space-y-6 relative overflow-hidden">
+            <div class="space-y-3">
+                <div class="inline-block p-4 bg-cyan-500/10 rounded-full border border-cyan-500/20 mb-1">
+                    <span class="text-5xl animate-bounce inline-block">🌋 🌊 🌬️</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">지구계 상호작용 탐험 퀴즈</h2>
+                <p class="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
+                    지구계에서 일어나는 다양한 자연 현상을 읽고, 어떤 두 구성 요소가 상호작용하는지 정답을 선택해 보세요!
+                </p>
+            </div>
+
+            <!-- Rules Card -->
+            <div class="bg-slate-900/80 rounded-2xl p-4 text-left border border-slate-800 text-xs sm:text-sm space-y-2.5">
+                <div class="font-bold text-cyan-400 flex items-center space-x-2 border-b border-slate-800 pb-2">
+                    <span>🎮</span> <span>게임 규칙 안내</span>
+                </div>
+                <ul class="space-y-1.5 text-slate-300">
+                    <li class="flex items-start"><span class="text-amber-400 mr-2">✦</span><span><strong>생명 3개:</strong> 오답이거나 시간 초과 시 생명이 1개 감소합니다.</span></li>
+                    <li class="flex items-start"><span class="text-amber-400 mr-2">✦</span><span><strong>제한 시간 12초:</strong> 각 문제당 12초 안에 두 가지 요소 선택!</span></li>
+                    <li class="flex items-start"><span class="text-amber-400 mr-2">✦</span><span><strong>스피드 & 콤보 보너스:</strong> 빠르고 연속으로 맞힐수록 점수 대폭 상승!</span></li>
+                    <li class="flex items-start"><span class="text-amber-400 mr-2">✦</span><span><strong>정리표 제공:</strong> 완료 후 지구계 상호작용 정리표를 복습할 수 있어요.</span></li>
+                </ul>
+            </div>
+
+            <!-- Student Info Input Form -->
+            <div class="bg-slate-900/80 rounded-2xl p-4 text-left border border-slate-800 space-y-3">
+                <div class="font-bold text-cyan-400 flex items-center space-x-2 border-b border-slate-800 pb-2 text-xs sm:text-sm">
+                    <span>👤</span> <span>탐험가 정보 입력</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                    <div>
+                        <label for="inputStudentId" class="block text-slate-400 font-semibold mb-1">학번 <span class="text-red-400">*</span></label>
+                        <input type="text" id="inputStudentId" placeholder="예: 10101" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-all font-medium">
+                    </div>
+                    <div>
+                        <label for="inputStudentName" class="block text-slate-400 font-semibold mb-1">이름 <span class="text-red-400">*</span></label>
+                        <input type="text" id="inputStudentName" placeholder="예: 홍길동" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-all font-medium">
+                    </div>
+                </div>
+            </div>
+
+            <!-- High Score Badge -->
+            <div id="startHighScore" class="text-xs font-semibold text-slate-400 flex justify-center items-center space-x-2 bg-slate-800/50 py-2 rounded-xl border border-slate-800">
+                <span>🏆 최고 기록: <span id="topScoreValue" class="text-amber-400 font-extrabold text-sm">0</span>점</span>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-cyan-600 via-teal-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-extrabold text-lg rounded-2xl shadow-lg shadow-cyan-500/20 active:scale-98 transition-all flex items-center justify-center space-x-2">
+                <span>🚀 퀴즈 시작하기</span>
+            </button>
+        </main>
+
+        <main id="gameScreen" class="hidden space-y-4">
+            
+            <!-- Dashboard (Lives, Score, Combo, Timer) -->
+            <div class="glass-panel p-4 rounded-2xl shadow-xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <!-- Lives -->
+                    <div class="flex items-center space-x-1" id="livesContainer">
+                        <span class="text-xl">❤️</span>
+                        <span class="text-xl">❤️</span>
+                        <span class="text-xl">❤️</span>
+                    </div>
+
+                    <!-- Combo Badge -->
+                    <div id="comboBadge" class="hidden px-3 py-1 bg-amber-500/20 border border-amber-500/40 rounded-full flex items-center space-x-1 animate-pulse">
+                        <span class="text-xs font-bold text-amber-300">🔥 COMBO</span>
+                        <span id="comboCount" class="font-black text-amber-400 text-sm">x0</span>
+                    </div>
+
+                    <!-- Score -->
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block font-semibold">SCORE</span>
+                        <span id="currentScore" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">0</span>
+                    </div>
+                </div>
+
+                <!-- Timer Bar (12s) -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-bold text-slate-400">
+                        <span class="flex items-center space-x-1">⏱️ <span>제한시간</span></span>
+                        <span id="timerText" class="text-cyan-300">12.0초</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                        <div id="timerBar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full transition-all duration-100 ease-linear w-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phenomenon Question Display Box -->
+            <div id="cardContainer" class="glass-panel p-6 sm:p-8 rounded-3xl shadow-2xl text-center space-y-5 border border-slate-700/60 relative">
+                
+                <div class="flex justify-between items-center text-xs text-slate-400 font-semibold border-b border-slate-800 pb-3">
+                    <span id="questionNum" class="bg-slate-800 px-3 py-1 rounded-full text-slate-300">STAGE 1 / 20</span>
+                    <span class="text-cyan-400 flex items-center space-x-1">
+                        <span>💡 상호작용하는 2개 권역을 선택하세요</span>
+                    </span>
+                </div>
+
+                <!-- Question Text -->
+                <div class="py-2 space-y-3">
+                    <div id="phenomenonCategory" class="text-xs font-bold text-cyan-400 bg-cyan-950/60 inline-block px-3 py-1 rounded-full border border-cyan-500/30">
+                        지구계 현상 예시
+                    </div>
+                    <h2 id="targetPhenomenon" class="text-xl sm:text-2xl font-extrabold text-white leading-snug break-keep drop-shadow-md">
+                        화산 폭발로 분출된 화산재가 대기를 가려 지구 전체 기온이 하강했다.
+                    </h2>
+                </div>
+
+                <!-- Selection Slots Box -->
+                <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-700/80 space-y-2">
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">내가 선택한 두 영역</div>
+                    <div class="flex justify-center items-center space-x-3 sm:space-x-4">
+                        
+                        <!-- Slot 1 -->
+                        <div id="slot1" class="slot-box w-28 sm:w-36 h-12 rounded-xl bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center font-black text-sm text-slate-400">
+                            첫 번째 요소
+                        </div>
+
+                        <span class="text-xl font-bold text-cyan-400 animate-pulse">↔</span>
+
+                        <!-- Slot 2 -->
+                        <div id="slot2" class="slot-box w-28 sm:w-36 h-12 rounded-xl bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center font-black text-sm text-slate-400">
+                            두 번째 요소
+                        </div>
+                    </div>
+
+                    <button id="resetSelectionBtn" onclick="resetSelection()" class="text-[11px] text-slate-400 hover:text-cyan-300 underline pt-1 font-semibold">
+                        🔄 선택 취소하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5 Sphere Buttons -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                <button onclick="selectSphere('지권')" id="btn-지권" class="sphere-btn p-3.5 rounded-2xl bg-slate-800/90 hover:bg-amber-600/30 border border-amber-500/40 hover:border-amber-400 flex flex-col items-center justify-center space-y-1 shadow-lg group">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">🪨</span>
+                    <span class="font-black text-amber-400 text-sm">지권</span>
+                    <span class="text-[10px] text-slate-400">지각·암석·화산</span>
+                </button>
+
+                <button onclick="selectSphere('수권')" id="btn-수권" class="sphere-btn p-3.5 rounded-2xl bg-slate-800/90 hover:bg-sky-600/30 border border-sky-500/40 hover:border-sky-400 flex flex-col items-center justify-center space-y-1 shadow-lg group">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">💧</span>
+                    <span class="font-black text-sky-400 text-sm">수권</span>
+                    <span class="text-[10px] text-slate-400">강물·바다·빙하</span>
+                </button>
+
+                <button onclick="selectSphere('기권')" id="btn-기권" class="sphere-btn p-3.5 rounded-2xl bg-slate-800/90 hover:bg-teal-600/30 border border-teal-500/40 hover:border-teal-400 flex flex-col items-center justify-center space-y-1 shadow-lg group">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">🌬️</span>
+                    <span class="font-black text-teal-400 text-sm">기권</span>
+                    <span class="text-[10px] text-slate-400">대기·바람·구름</span>
+                </button>
+
+                <button onclick="selectSphere('생물권')" id="btn-생물권" class="sphere-btn p-3.5 rounded-2xl bg-slate-800/90 hover:bg-emerald-600/30 border border-emerald-500/40 hover:border-emerald-400 flex flex-col items-center justify-center space-y-1 shadow-lg group">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">🌿</span>
+                    <span class="font-black text-emerald-400 text-sm">생물권</span>
+                    <span class="text-[10px] text-slate-400">식물·동물·생물</span>
+                </button>
+
+                <button onclick="selectSphere('외권')" id="btn-외권" class="sphere-btn col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-slate-800/90 hover:bg-purple-600/30 border border-purple-500/40 hover:border-purple-400 flex flex-col items-center justify-center space-y-1 shadow-lg group">
+                    <span class="text-2xl group-hover:scale-110 transition-transform">🚀</span>
+                    <span class="font-black text-purple-400 text-sm">외권</span>
+                    <span class="text-[10px] text-slate-400">태양·유성·우주</span>
+                </button>
+            </div>
+        </main>
+
+        <main id="resultScreen" class="hidden glass-panel p-6 sm:p-8 rounded-3xl text-center shadow-2xl space-y-6">
+            <div class="space-y-2">
+                <div id="resultIcon" class="text-6xl animate-bounce">🏆</div>
+                <h2 id="resultTitle" class="text-2xl sm:text-3xl font-black text-white">탐험 완료!</h2>
+                
+                <!-- Student Info Display Badge -->
+                <div id="resultStudentBadge" class="inline-flex items-center space-x-2 px-4 py-1.5 bg-cyan-500/20 border border-cyan-400/30 rounded-full text-cyan-300 font-bold text-sm my-1">
+                    <span>🎓</span>
+                    <span id="displayStudentInfo">10101 홍길동</span>
+                </div>
+
+                <!-- Date & Time Stamp -->
+                <div id="resultDate" class="text-[11px] text-slate-400 font-medium"></div>
+
+                <p id="resultSubtitle" class="text-slate-300 text-xs sm:text-sm">지구계 상호작용 문제를 멋지게 완수하셨습니다!</p>
+            </div>
+
+            <!-- Score Summary Cards -->
+            <div class="grid grid-cols-2 gap-3 text-left">
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <span class="text-xs text-slate-400 block font-semibold">최종 점수</span>
+                    <span id="finalScore" class="text-2xl font-black text-amber-400">0</span>
+                </div>
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <span class="text-xs text-slate-400 block font-semibold">최대 콤보</span>
+                    <span id="maxComboText" class="text-2xl font-black text-cyan-400">0</span>
+                </div>
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <span class="text-xs text-slate-400 block font-semibold">정답률</span>
+                    <span id="accuracyText" class="text-2xl font-black text-emerald-400">0%</span>
+                </div>
+                <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                    <span class="text-xs text-slate-400 block font-semibold">맞힌 문제</span>
+                    <span id="correctCountText" class="text-2xl font-black text-indigo-400">0 / 0</span>
+                </div>
+            </div>
+
+            <!-- Wrong Answer Review List -->
+            <div id="reviewContainer" class="hidden space-y-2 text-left">
+                <div class="font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>❌ 틀린 문제 복습하기</span>
+                    <span id="reviewCount" class="text-red-400">0개</span>
+                </div>
+                <div id="reviewList" class="max-h-48 overflow-y-auto space-y-2 pr-1">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-2 space-y-2">
+                <button onclick="downloadResultImage()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base">
+                    <span>📸</span> <span>결과 화면 이미지 다운로드</span>
+                </button>
+                <button onclick="startGame()" class="w-full py-3.5 bg-gradient-to-r from-cyan-600 via-teal-500 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-black rounded-2xl shadow-lg active:scale-98 transition-all">
+                    🔄 다시 도전하기
+                </button>
+                <button onclick="openCodex()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl border border-slate-700 transition-all text-sm">
+                    📚 지구계 상호작용 정리표 확인하기
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Interaction Reference Codex Modal -->
+    <div id="codexModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-2xl max-h-[90vh] rounded-3xl p-6 flex flex-col space-y-4 shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🔄</span>
+                    <h3 class="text-lg font-black text-white">지구계 상호작용 정리표</h3>
+                </div>
+                <button onclick="closeCodex()" class="text-slate-400 hover:text-white p-1 rounded-lg text-xl font-bold">✕</button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 space-y-3 pr-1 text-sm">
+                
+                <!-- Table Row 1 -->
+                <div class="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-amber-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>🪨 ↔ 🌬️</span>
+                        <span>지권 ↔ 기권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-amber-300">대표 예시:</span> 화산 폭발로 인한 기온 하강 (화산재 분출, 바람에 의한 암석 풍화 등)
+                    </div>
+                </div>
+
+                <!-- Table Row 2 -->
+                <div class="bg-slate-900/90 border border-sky-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-sky-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>💧 ↔ 🪨</span>
+                        <span>수권 ↔ 지권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-sky-300">대표 예시:</span> 강물에 의한 지형 변화 (지하수 석회동굴, 해안 절벽 침식 등)
+                    </div>
+                </div>
+
+                <!-- Table Row 3 -->
+                <div class="bg-slate-900/90 border border-teal-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-teal-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>💧 ↔ 🌬️</span>
+                        <span>수권 ↔ 기권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-teal-300">대표 예시:</span> 물의 증발과 비 (구름 형성, 태풍 발생, 대기와 해수 열 교환)
+                    </div>
+                </div>
+
+                <!-- Table Row 4 -->
+                <div class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-purple-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>🚀 ↔ 🌬️</span>
+                        <span>외권 ↔ 기권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-purple-300">대표 예시:</span> 유성 (별똥별, 오로라 현상, 태양풍의 대기층 영향)
+                    </div>
+                </div>
+
+                <!-- Table Row 5 -->
+                <div class="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-emerald-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>🌿 ↔ 🪨</span>
+                        <span>생물권 ↔ 지권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-emerald-300">대표 예시:</span> 식물 뿌리에 의한 암석 풍화 (화석 형성, 지렁이 토양 개량)
+                    </div>
+                </div>
+
+                <!-- Table Row 6 -->
+                <div class="bg-slate-900/90 border border-indigo-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-indigo-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>🌬️ ↔ 🌿</span>
+                        <span>기권 ↔ 생물권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-indigo-300">대표 예시:</span> 바람에 의한 씨앗 이동 (생물의 광합성 및 호흡 작용)
+                    </div>
+                </div>
+
+                <!-- Table Row 7 -->
+                <div class="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="font-extrabold text-cyan-400 text-base sm:w-2/5 flex items-center space-x-2">
+                        <span>💧 ↔ 🌿</span>
+                        <span>수권 ↔ 생물권</span>
+                    </div>
+                    <div class="text-xs text-slate-200 sm:w-3/5 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="font-semibold text-cyan-300">대표 예시:</span> 물속 생물의 서식 (수중 호흡, 식물 증산 작용)
+                    </div>
+                </div>
+
+            </div>
+
+            <button onclick="closeCodex()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl border border-slate-700">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <footer class="text-center text-xs text-slate-500 py-2 z-10">
+        지구계 상호작용 탐험 퀴즈 ⓒ 2026
+    </footer>
+
+    <script>
+        // Earth System Interaction Questions Dataset
+        const INTERACTION_DATA = [
+            // 지권 ↔ 기권
+            { text: '화산 폭발로 분출된 화산재가 대기를 가려 지구 전체 기온이 하강했다.', pair: ['지권', '기권'], icon: '🌋' },
+            { text: '강한 바람에 의해 암석이 오랫동안 깎여 버섯바위 모양 지형이 되었다.', pair: ['지권', '기권'], icon: '🗿' },
+            { text: '몽골 사막의 모래와 먼지가 바람을 타고 날아와 황사 현상이 일어났다.', pair: ['지권', '기권'], icon: '🏜️' },
+
+            // 수권 ↔ 지권
+            { text: '흐르는 강물에 의해 지표면 암석이 깎여 깊은 V자곡 계곡이 형성되었다.', pair: ['수권', '지권'], icon: '🏞️' },
+            { text: '파도가 지속적으로 바위벽에 부딪혀 해안 절벽과 해식 동굴이 형성되었다.', pair: ['수권', '지권'], icon: '🌊' },
+            { text: '지하수가 암석을 천천히 녹여 지하 깊은 곳에 석회 동굴과 종유석이 생겼다.', pair: ['수권', '지권'], icon: '🦇' },
+
+            // 수권 ↔ 기권
+            { text: '따뜻한 바다 수면에서 물이 증발하여 공기 중에서 구름이 되고 비가 내렸다.', pair: ['수권', '기권'], icon: '🌧️' },
+            { text: '수온이 높은 열대 해상에서 대기와 열을 교환하며 강력한 태풍이 생성되었다.', pair: ['수권', '기권'], icon: '🌀' },
+            { text: '바다 표면의 물이 증발하며 대기 중으로 수증기를 공급했다.', pair: ['수권', '기권'], icon: '💧' },
+
+            // 외권 ↔ 기권
+            { text: '우주에서 지구로 진입한 암석 조각이 대기층과 마찰하여 유성(별똥별)이 되었다.', pair: ['외권', '기권'], icon: '☄️' },
+            { text: '태양에서 방출된 플라스마 입자가 지구 대기 상층부 입자와 충돌하여 오로라가 발생했다.', pair: ['외권', '기권'], icon: '🌌' },
+
+            // 생물권 ↔ 지권
+            { text: '바위 틈에서 자란 식물의 뿌리가 자라나면서 암석을 균열시키고 풍화시켰다.', pair: ['생물권', '지권'], icon: '🌱' },
+            { text: '고대 생물의 유해가 오랫동안 땅속에 묻혀 가열되고 압력을 받아 석탄과 석유가 되었다.', pair: ['생물권', '지권'], icon: '🦴' },
+            { text: '지렁이가 땅속을 헤집고 다니며 흙에 공기를 공급해 토양을 비옥하게 만들었다.', pair: ['생물권', '지권'], icon: '🪱' },
+
+            // 기권 ↔ 생물권
+            { text: '민들레 씨앗이 강한 바람을 타고 멀리 날아가 다른 지역에 싹을 틔웠다.', pair: ['기권', '생물권'], icon: '🌾' },
+            { text: '식물이 대기 중의 이산화탄소를 흡수하고 산소를 방출하는 광합성을 진행했다.', pair: ['기권', '생물권'], icon: '🍃' },
+            { text: '동물들이 대기 중의 산소를 흡수하고 이산화탄소를 배출하는 호흡을 했다.', pair: ['기권', '생물권'], icon: '🫁' },
+
+            // 수권 ↔ 생물권
+            { text: '물고기와 다양한 해양 생물들이 바다와 강물 속에서 서식하며 살아간다.', pair: ['수권', '생물권'], icon: '🐟' },
+            { text: '산호초가 따뜻하고 깨끗한 바닷속에서 군집을 이루며 해양 생물의 서식지가 되었다.', pair: ['수권', '생물권'], icon: '🪸' },
+            { text: '식물이 뿌리로 흡수한 물을 잎의 기공을 통해 수증기로 배출하는 증산 작용을 했다.', pair: ['수권', '생물권'], icon: '🪴' }
+        ];
+
+        let audioCtx = null;
+        let soundEnabled = true;
+        let studentId = '';
+        let studentName = '';
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(130, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'combo') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.22);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'over') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.6);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+                    osc.start(now);
+                    osc.stop(now + 0.65);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundIcon').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        // State variables
+        let gameQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let maxCombo = 0;
+        let correctCount = 0;
+        let wrongAnswers = [];
+        let timerInterval = null;
+        let timeLeft = 12.0; // 12 seconds rule
+        let selectedSpheres = [];
+
+        let highScore = parseInt(localStorage.getItem('earth_interaction_highscore') || '0');
+        document.getElementById('topScoreValue').innerText = highScore;
+
+        function updateLivesUI() {
+            const container = document.getElementById('livesContainer');
+            if (!container) return;
+            let html = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < lives) {
+                    html += '<span class="text-xl">❤️</span>';
+                } else {
+                    html += '<span class="text-xl opacity-20">🖤</span>';
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        function updateScoreUI() {
+            document.getElementById('currentScore').innerText = score;
+            const comboBadge = document.getElementById('comboBadge');
+            if (combo >= 2) {
+                comboBadge.classList.remove('hidden');
+                document.getElementById('comboCount').innerText = `x${combo}`;
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+        }
+
+        function startGame() {
+            const idInput = document.getElementById('inputStudentId').value.trim();
+            const nameInput = document.getElementById('inputStudentName').value.trim();
+
+            if (!idInput || !nameInput) {
+                showToast('학번과 이름을 모두 입력해 주세요!', 'error');
+                return;
+            }
+
+            studentId = idInput;
+            studentName = nameInput;
+
+            initAudio();
+            gameQuestions = [...INTERACTION_DATA].sort(() => Math.random() - 0.5);
+            currentIndex = 0;
+            score = 0;
+            lives = 3;
+            combo = 0;
+            maxCombo = 0;
+            correctCount = 0;
+            wrongAnswers = [];
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+
+            updateLivesUI();
+            updateScoreUI();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= gameQuestions.length || lives <= 0) {
+                endGame();
+                return;
+            }
+
+            const q = gameQuestions[currentIndex];
+            selectedSpheres = [];
+            updateSlotsUI();
+
+            document.getElementById('questionNum').innerText = `STAGE ${currentIndex + 1} / ${gameQuestions.length}`;
+            document.getElementById('targetPhenomenon').innerText = `${q.icon} "${q.text}"`;
+
+            // Reset button styles
+            const allSpheres = ['지권', '수권', '기권', '생물권', '외권'];
+            allSpheres.forEach(s => {
+                const btn = document.getElementById(`btn-${s}`);
+                if (btn) btn.classList.remove('ring-4', 'ring-cyan-400', 'bg-cyan-900/60');
+            });
+
+            startTimer();
+        }
+
+        // Timer Rule: 12 seconds
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 12.0;
+            updateTimerDisplay();
+
+            const startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = (Date.now() - startTime) / 1000;
+                timeLeft = Math.max(0, 12.0 - elapsed);
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 50);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timerText').innerText = `${timeLeft.toFixed(1)}초`;
+            const bar = document.getElementById('timerBar');
+            const pct = (timeLeft / 12.0) * 100;
+            bar.style.width = `${pct}%`;
+
+            if (timeLeft > 6.0) {
+                bar.className = 'h-full bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full transition-all duration-100 ease-linear';
+            } else if (timeLeft > 3.0) {
+                bar.className = 'h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-100 ease-linear';
+            } else {
+                bar.className = 'h-full bg-gradient-to-r from-red-500 to-pink-600 rounded-full transition-all duration-100 ease-linear animate-pulse';
+            }
+        }
+
+        function selectSphere(sphereName) {
+            playSound('click');
+            
+            // If already selected, remove it
+            const idx = selectedSpheres.indexOf(sphereName);
+            if (idx > -1) {
+                selectedSpheres.splice(idx, 1);
+            } else {
+                if (selectedSpheres.length < 2) {
+                    selectedSpheres.push(sphereName);
+                }
+            }
+
+            updateSlotsUI();
+
+            // Highlight buttons
+            const allSpheres = ['지권', '수권', '기권', '생물권', '외권'];
+            allSpheres.forEach(s => {
+                const btn = document.getElementById(`btn-${s}`);
+                if (btn) {
+                    if (selectedSpheres.includes(s)) {
+                        btn.classList.add('ring-4', 'ring-cyan-400', 'bg-cyan-900/60');
+                    } else {
+                        btn.classList.remove('ring-4', 'ring-cyan-400', 'bg-cyan-900/60');
+                    }
+                }
+            });
+
+            // Automatically check answer once 2 spheres are selected
+            if (selectedSpheres.length === 2) {
+                setTimeout(() => {
+                    checkAnswer();
+                }, 200);
+            }
+        }
+
+        function resetSelection() {
+            playSound('click');
+            selectedSpheres = [];
+            updateSlotsUI();
+            const allSpheres = ['지권', '수권', '기권', '생물권', '외권'];
+            allSpheres.forEach(s => {
+                const btn = document.getElementById(`btn-${s}`);
+                if (btn) btn.classList.remove('ring-4', 'ring-cyan-400', 'bg-cyan-900/60');
+            });
+        }
+
+        function updateSlotsUI() {
+            const slot1 = document.getElementById('slot1');
+            const slot2 = document.getElementById('slot2');
+
+            const sphereColors = {
+                '지권': 'text-amber-400 border-amber-500/80 bg-amber-950/40',
+                '수권': 'text-sky-400 border-sky-500/80 bg-sky-950/40',
+                '기권': 'text-teal-400 border-teal-500/80 bg-teal-950/40',
+                '생물권': 'text-emerald-400 border-emerald-500/80 bg-emerald-950/40',
+                '외권': 'text-purple-400 border-purple-500/80 bg-purple-950/40'
+            };
+
+            if (selectedSpheres[0]) {
+                slot1.innerText = selectedSpheres[0];
+                slot1.className = `slot-box w-28 sm:w-36 h-12 rounded-xl border-2 flex items-center justify-center font-black text-base shadow-lg ${sphereColors[selectedSpheres[0]]}`;
+            } else {
+                slot1.innerText = '첫 번째 요소';
+                slot1.className = 'slot-box w-28 sm:w-36 h-12 rounded-xl bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center font-black text-xs text-slate-400';
+            }
+
+            if (selectedSpheres[1]) {
+                slot2.innerText = selectedSpheres[1];
+                slot2.className = `slot-box w-28 sm:w-36 h-12 rounded-xl border-2 flex items-center justify-center font-black text-base shadow-lg ${sphereColors[selectedSpheres[1]]}`;
+            } else {
+                slot2.innerText = '두 번째 요소';
+                slot2.className = 'slot-box w-28 sm:w-36 h-12 rounded-xl bg-slate-800 border-2 border-dashed border-slate-600 flex items-center justify-center font-black text-xs text-slate-400';
+            }
+        }
+
+        function checkAnswer() {
+            clearInterval(timerInterval);
+            const q = gameQuestions[currentIndex];
+
+            const isCorrect = (selectedSpheres.includes(q.pair[0]) && selectedSpheres.includes(q.pair[1]));
+
+            if (isCorrect) {
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+                correctCount++;
+
+                const baseScore = 15;
+                const speedBonus = Math.floor(timeLeft * 1.5);
+                const comboBonus = (combo - 1) * 4;
+                const totalEarned = baseScore + speedBonus + comboBonus;
+
+                score += totalEarned;
+                playSound(combo >= 3 ? 'combo' : 'correct');
+                spawnParticles(true);
+
+                showToast(`정답! +${totalEarned}점 (${q.pair[0]} ↔ ${q.pair[1]})`, 'success');
+            } else {
+                combo = 0;
+                lives--;
+                playSound('wrong');
+                wrongAnswers.push({
+                    text: q.text,
+                    correct: `${q.pair[0]} ↔ ${q.pair[1]}`,
+                    selected: selectedSpheres.length === 2 ? `${selectedSpheres[0]} ↔ ${selectedSpheres[1]}` : '미완성'
+                });
+
+                const cardElem = document.getElementById('cardContainer');
+                cardElem.classList.add('animate-shake');
+                setTimeout(() => cardElem.classList.remove('animate-shake'), 400);
+
+                showToast(`오답! 정답은 [${q.pair[0]} ↔ ${q.pair[1]}] 입니다.`, 'error');
+            }
+
+            updateLivesUI();
+            updateScoreUI();
+
+            currentIndex++;
+            setTimeout(() => {
+                loadQuestion();
+            }, 700);
+        }
+
+        function handleTimeout() {
+            const q = gameQuestions[currentIndex];
+            combo = 0;
+            lives--;
+            playSound('wrong');
+            wrongAnswers.push({
+                text: q.text,
+                correct: `${q.pair[0]} ↔ ${q.pair[1]}`,
+                selected: '시간 초과'
+            });
+
+            const cardElem = document.getElementById('cardContainer');
+            cardElem.classList.add('animate-shake');
+            setTimeout(() => cardElem.classList.remove('animate-shake'), 400);
+
+            showToast(`시간 초과! 정답은 [${q.pair[0]} ↔ ${q.pair[1]}] 입니다.`, 'error');
+
+            updateLivesUI();
+            updateScoreUI();
+
+            currentIndex++;
+            setTimeout(() => {
+                loadQuestion();
+            }, 700);
+        }
+
+        function showToast(msg, type) {
+            const existing = document.getElementById('gameToast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'gameToast';
+            toast.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2.5 rounded-2xl text-xs font-black shadow-2xl z-50 transition-all border ${
+                type === 'success' 
+                    ? 'bg-emerald-600/95 text-white border-emerald-400' 
+                    : 'bg-red-600/95 text-white border-red-400'
+            }`;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast) toast.remove();
+            }, 1300);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            document.getElementById('displayStudentInfo').innerText = `${studentId} ${studentName}`;
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${now.getHours()}시 ${now.getMinutes()}분`;
+            document.getElementById('resultDate').innerText = `🗓️ 탐험 일시: ${dateStr}`;
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('earth_interaction_highscore', highScore.toString());
+                document.getElementById('topScoreValue').innerText = highScore;
+            }
+
+            const totalAttempted = currentIndex;
+            const accuracy = totalAttempted > 0 ? Math.round((correctCount / totalAttempted) * 100) : 0;
+
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('maxComboText').innerText = `x${maxCombo}`;
+            document.getElementById('accuracyText').innerText = `${accuracy}%`;
+            document.getElementById('correctCountText').innerText = `${correctCount} / ${totalAttempted}`;
+
+            if (lives <= 0) {
+                playSound('over');
+                document.getElementById('resultIcon').innerText = '💥';
+                document.getElementById('resultTitle').innerText = '게임 오버';
+                document.getElementById('resultSubtitle').innerText = '생명을 모두 소모했습니다. 다시 도전해보세요!';
+            } else {
+                playSound('correct');
+                spawnParticles(true);
+                document.getElementById('resultIcon').innerText = '🎉';
+                document.getElementById('resultTitle').innerText = '탐험 완수!';
+                document.getElementById('resultSubtitle').innerText = '지구계 상호작용 퀴즈를 성공적으로 완수했습니다!';
+            }
+
+            const reviewContainer = document.getElementById('reviewContainer');
+            const reviewList = document.getElementById('reviewList');
+            reviewList.innerHTML = '';
+
+            if (wrongAnswers.length > 0) {
+                reviewContainer.classList.remove('hidden');
+                document.getElementById('reviewCount').innerText = `${wrongAnswers.length}개`;
+
+                wrongAnswers.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-xs space-y-1';
+                    row.innerHTML = `
+                        <div class="text-slate-300 font-medium">"${item.text}"</div>
+                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-800">
+                            <span class="text-red-400 line-through">선택: ${item.selected}</span>
+                            <span class="text-emerald-400 font-bold">정답: ${item.correct}</span>
+                        </div>
+                    `;
+                    reviewList.appendChild(row);
+                });
+            } else {
+                reviewContainer.classList.add('hidden');
+            }
+        }
+
+        function openCodex() {
+            document.getElementById('codexModal').classList.remove('hidden');
+        }
+
+        function closeCodex() {
+            document.getElementById('codexModal').classList.add('hidden');
+        }
+
+        function downloadResultImage() {
+            const resultElem = document.getElementById('resultScreen');
+            if (!resultElem) return;
+
+            showToast('📸 이미지 생성 중...', 'success');
+
+            if (typeof html2canvas === 'undefined') {
+                showToast('❌ 이미지 저장 라이브러리를 불러오지 못했습니다.', 'error');
+                return;
+            }
+
+            html2canvas(resultElem, {
+                backgroundColor: '#0b1329',
+                scale: 2,
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const cleanId = studentId.replace(/[^a-zA-Z0-9가-힣]/g, '');
+                const cleanName = studentName.replace(/[^a-zA-Z0-9가-힣]/g, '');
+                const filename = `지구계상호작용_성적표_${cleanId}_${cleanName}.png`;
+                
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('✅ 결과 이미지가 다운로드 되었습니다!', 'success');
+            }).catch(err => {
+                console.error(err);
+                showToast('❌ 이미지 저장 중 오류가 발생했습니다.', 'error');
+            });
+        }
+
+        const fxCanvas = document.getElementById('fxCanvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            fxCanvas.width = window.innerWidth;
+            fxCanvas.height = window.innerHeight;
+            
+            const bgCanvas = document.getElementById('bgCanvas');
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            drawBackgroundStars();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function spawnParticles(isVictory) {
+            const count = isVictory ? 45 : 15;
+            const colors = ['#06b6d4', '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'];
+            
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.8) * 12,
+                    size: Math.random() * 6 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1,
+                    life: Math.random() * 30 + 30
+                });
+            }
+        }
+
+        function renderParticles() {
+            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2;
+                p.alpha -= 1 / p.life;
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                fxCtx.save();
+                fxCtx.globalAlpha = Math.max(0, p.alpha);
+                fxCtx.fillStyle = p.color;
+                fxCtx.beginPath();
+                fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                fxCtx.fill();
+                fxCtx.restore();
+            }
+            requestAnimationFrame(renderParticles);
+        }
+
+        function drawBackgroundStars() {
+            const bgCanvas = document.getElementById('bgCanvas');
+            const ctx = bgCanvas.getContext('2d');
+            ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 80; i++) {
+                const x = Math.random() * bgCanvas.width;
+                const y = Math.random() * bgCanvas.height;
+                const r = Math.random() * 1.5;
+                const alpha = Math.random() * 0.5 + 0.2;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        window.onload = function() {
+            resizeCanvas();
+            renderParticles();
+        };
+
+        // Keyboard shortcuts for quick answering (1:지권, 2:수권, 3:기권, 4:생물권, 5:외권)
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('gameScreen').classList.contains('hidden')) return;
+            if (e.key === '1') selectSphere('지권');
+            if (e.key === '2') selectSphere('수권');
+            if (e.key === '3') selectSphere('기권');
+            if (e.key === '4') selectSphere('생물권');
+            if (e.key === '5') selectSphere('외권');
+            if (e.key === 'c' || e.key === 'C') resetSelection();
+        });
+    </script>
+</body>
+</html>
